@@ -1,6 +1,6 @@
 from datetime import datetime
 from hashlib import sha256
-
+	
 class ApiAuth( object ):
 	
 	def __init__( self, secret ):

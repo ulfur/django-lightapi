@@ -26,7 +26,7 @@ class Client( object ):
 
 		assert_status( status )
 
-		if response['version'] == VERSION:
+		if response['version'] > VERSION:
 			warnings.warn('The server is running a more recent version than your client.\nErrors may ensue.', DeprecationWarning)
 
 		self._services = response['services']
