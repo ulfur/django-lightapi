@@ -1,6 +1,6 @@
 import httplib, urllib, json, warnings
 
-from . import VERSION
+from . import get_version
 from .auth import ApiAuth
 
 ERRORS = {
@@ -26,7 +26,7 @@ class Client( object ):
 
 		assert_status( status )
 
-		if response['version'] > VERSION:
+		if response['version'] > get_version():
 			warnings.warn('The server is running a more recent version than your client.\nErrors may ensue.', DeprecationWarning)
 
 		self._services = response['services']
