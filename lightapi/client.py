@@ -4,7 +4,8 @@ from . import get_version
 from .auth import ApiAuth
 
 ERRORS = {
-	403: 'The key doesn\'t fit.',
+	403: 'Forbidden. (The key doesn\'t fit)',
+	400: 'Bad request. (Parameter missing?)'
 	404: 'Service not found.',
 	500: 'Server side error.',
 }
