@@ -1,11 +1,12 @@
+#encoding: utf-8
+
 import httplib, urllib, json, warnings
 
 from . import get_version
-from .auth import ApiAuth
 
 ERRORS = {
 	403: 'Forbidden. (The key doesn\'t fit)',
-	400: 'Bad request. (Parameter missing?)'
+	400: 'Bad request. (Parameter missing?)',
 	404: 'Service not found.',
 	500: 'Server side error.',
 }
@@ -19,11 +20,9 @@ def assert_status( status ):
 	
 class Client( object ):
 
-	def __init__( self, host, secret, key=None, service_url='/services' ):
-		self._key = key
-		self._auth = ApiAuth( secret )
+	def __init__( self, host, service_url='/services' ):
 		self._host = host
-		status, response = self.request( service_url, None, method='GET' )
+		status, response = self.request( service_url, method='GET' )
 
 		assert_status( status )
 
@@ -32,35 +31,36 @@ class Client( object ):
 
 		self._services = response['services']
 		
-	def generate_data( self, data ):
-		package = {'values':json.dumps(data), 'token':self._auth.generate_key()}
-		if self._key: package.update( {'key':self._key} )
-		return urllib.urlencode( package )
-
 	def load_data( self, datastr ):
 		return json.loads( datastr )
-		
-	def request( self, path, data, method='POST' ):
+	
+	def prepare_data( self, data ):
+		return data
+			
+	def request( self, path, method='POST', **data ):
 		http = httplib.HTTPConnection( self._host )
-		data = self.generate_data( data )
+		data = self.prepare_data( data )
 		
 		if method=='POST':
 			head = {'Content-type': 'application/x-www-form-urlencoded', 'Accept': 'text/plain' }
 			http.request( method, path, data, head )
 		else:
-			http.request( method, '%s?%s'%(path,data) )
+			url = '%s?%s'%(path,urllib.urlencode(data)) if data else path
+			http.request( method, url )
 
 		response = http.getresponse( )
+		res = response.read()
+		print res
 
-		assert_status( response.status )		
-
-		return response.status, self.load_data( response.read( ) )
+		assert_status( response.status )
+		
+		return response.status, self.load_data( res )
 				
 	def __getattr__( self, name ):
 		try:
 			method, name = name.split('_')
 			if name in self._services.keys() and method in self._services[name]['methods']:
-				return lambda *data: self.request( self._services[name]['location'], data, method=method.upper() )
+				return lambda **data: self.request( self._services[name]['url'], method=method.upper(), **data )
 		except:
 			pass
 		raise TypeError( 'API has no service called: %s'%name )

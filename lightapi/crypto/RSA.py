@@ -1,10 +1,36 @@
-import os, sys
+import os
+from Crypto import Random
 from Crypto.Cipher import AES
 from Crypto.PublicKey import RSA
 import Crypto.Util.number
 
 KEYSIZE = 16
 
+class Key( object ):
+	
+	def __init__( self, key=None ):
+		if key:
+			self.importkey( key )
+		else:
+			self.create_key( )
+	
+	def create_key( self ):
+		random = Random.new().read
+		self._key = RSA.generate( 1024, random )
+	
+	def importkey( self, key ):
+		self._key = RSA.importKey( key )
+		
+	@property
+	def public( self ):
+		return self._key.publickey().exportKey()
+		
+	@property
+	def private( self ):
+		if self._key.has_private():
+			return self._key.exportKey()
+		return None
+		
 class Lock( object ):
 	
 	def __init__( self, key, size=KEYSIZE ):

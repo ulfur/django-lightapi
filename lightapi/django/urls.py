@@ -2,7 +2,7 @@ import inspect
 
 from django.conf.urls import patterns, url
 
-from .views import APIView, ServiceView
+from .views import APIView, ServiceView, EncryptedServiceView
 
 def api_urls( module, ns='' ):
 	urlpatterns = patterns('',)
@@ -29,4 +29,8 @@ def api_urls( module, ns='' ):
 		_service_defs = service_defs
 	urlpatterns.append( url(r'^services$', S.as_view(), name='lightapi-services') )	
 	
+	class SE( EncryptedServiceView ):
+		_service_defs = service_defs
+	urlpatterns.append( url(r'^enc/services$', S.as_view(), name='lightapi-services') )	
+		
 	return urlpatterns
