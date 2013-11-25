@@ -31,6 +31,6 @@ def api_urls( module, ns='' ):
 	
 	class SE( EncryptedServiceView ):
 		_service_defs = service_defs
-	urlpatterns.append( url(r'^enc/services$', S.as_view(), name='lightapi-services') )	
+	urlpatterns.append( url(r'^enc/services$', S.as_view(), name='lightapi-encoded-services') )	
 		
 	return urlpatterns

@@ -14,9 +14,10 @@ ERRORS = {
 class APIException( Exception ):
 	pass
 	
-def assert_status( status ):
+def assert_status( status, response='' ):
 	if status != 200:
-		raise APIException( ERRORS.get( status, 'Undefined error (%i).'%status) )
+		error_msg = ERRORS.get( status, 'Undefined error (%i).'%status )
+		raise APIException( 'ERROR: %s\nResponse: %s'%(error_msg,response) )
 	
 class Client( object ):
 
@@ -24,7 +25,7 @@ class Client( object ):
 		self._host = host
 		status, response = self.request( service_url, method='GET' )
 
-		assert_status( status )
+		assert_status( status, response )
 
 		if response['version'] > get_version():
 			warnings.warn('The server is running a more recent version than your client.\nErrors may ensue.', DeprecationWarning)
@@ -50,7 +51,6 @@ class Client( object ):
 
 		response = http.getresponse( )
 		res = response.read()
-		print res
 
 		assert_status( response.status )
 		

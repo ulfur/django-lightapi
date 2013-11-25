@@ -16,8 +16,6 @@ class APICryptoView( APIView ):
 		msg = self.get_param( 'msg' )
 		key = self.get_param( 'key' )
 		
-		print msg, key
-		
 		data = lock.decrypt( msg, key )
 		self.params = json.loads( data )
 		

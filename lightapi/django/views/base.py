@@ -48,6 +48,9 @@ class APIView( View ):
 
 	def NotFound( self, data ):
 		return self.response( 404, data )
+
+	def ERROR( self, data ):
+		return self.response( 400, data )
 		
 	def OK( self, data ):
 		return self.response( 200, data )

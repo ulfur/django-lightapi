@@ -15,7 +15,6 @@ class EncryptedClient( Client ):
 			data = json.loads( datastr )
 			datastr = self._private.decrypt( data['msg'], data['key'] )
 		
-		print datastr
 		return super(EncryptedClient, self).load_data( datastr )
 		
 	def prepare_data( self, data ):
