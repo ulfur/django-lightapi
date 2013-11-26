@@ -58,7 +58,7 @@ class Client( object ):
 				
 	def __getattr__( self, name ):
 		try:
-			method, name = name.split('_')
+			method, name = name.split('_', 1)
 			if name in self._services.keys() and method in self._services[name]['methods']:
 				return lambda **data: self.request( self._services[name]['url'], method=method.upper(), **data )
 		except:
