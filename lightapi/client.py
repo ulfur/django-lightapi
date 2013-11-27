@@ -46,6 +46,8 @@ class Client( object ):
 			head = {'Content-type': 'application/x-www-form-urlencoded', 'Accept': 'text/plain' }
 			http.request( method, path, data, head )
 		else:
+			for k,v in data.items():
+				data[k] = json.dumps(v)
 			url = '%s?%s'%(path,urllib.urlencode(data)) if data else path
 			http.request( method, url )
 

@@ -25,7 +25,7 @@ class APIView( View ):
 			check, param = self.check_params( self.required_params )
 			if not check:
 				return HttpResponseBadRequest('Parameter "%s" is required.'%param)
-			
+
 		return super(APIView, self).dispatch(request, *args, **kwargs)
 	
 	def check_params( self, required ):
@@ -35,7 +35,13 @@ class APIView( View ):
 		return True, None
 		
 	def get_param( self, name ):
-		return self.params.get( name, None )
+		p = self.params.get( name, None )
+		if p:
+			try:
+				return json.loads( p )
+			except ValueError:
+				return p
+		return None
 		
 	def get_values( self ):
 		values = self.get_param( 'values', None )
