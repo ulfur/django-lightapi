@@ -1,6 +1,7 @@
 #encoding: utf-8
 
 import json
+import traceback
 
 from django.core.urlresolvers import reverse
 
@@ -25,8 +26,10 @@ class APIView( View ):
 			check, param = self.check_params( self.required_params )
 			if not check:
 				return HttpResponseBadRequest('Parameter "%s" is required.'%param)
-
-		return super(APIView, self).dispatch(request, *args, **kwargs)
+		try:
+			return super(APIView, self).dispatch(request, *args, **kwargs)
+		except:
+			return self.Fail( )
 	
 	def check_params( self, required ):
 		for p in required:
@@ -47,19 +50,24 @@ class APIView( View ):
 		values = self.get_param( 'values', None )
  		return json.loads( values ) if values else None
 
-	def response( self, status, data ):
+	def response( self, status, data, success=False ):
+		data['success'] = success
 		res = HttpResponse( json.dumps( data ), content_type='application/json' )
 		res.status_code = status
 		return res
 
-	def NotFound( self, data ):
+	def NotFound( self, data={ } ):
 		return self.response( 404, data )
 
-	def ERROR( self, data ):
+	def ERROR( self, data={ } ):
 		return self.response( 400, data )
+	
+	def Fail( self, data={ } ):
+		data['trace'] = traceback.format_exc()
+		return self.response( 500, data )
 		
-	def OK( self, data ):
-		return self.response( 200, data )
+	def OK( self, data={ } ):
+		return self.response( 200, data, success=True )
 
 class ServiceView( APIView ):
 

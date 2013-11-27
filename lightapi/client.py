@@ -54,7 +54,7 @@ class Client( object ):
 		response = http.getresponse( )
 		res = response.read()
 
-		assert_status( response.status )
+		assert_status( response.status, res )
 		
 		return response.status, self.load_data( res )
 				
