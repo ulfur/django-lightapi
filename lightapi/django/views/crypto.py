@@ -1,42 +1,29 @@
+#encoding: utf-8
 
-import json
+import json, base64
 
 from django.conf import settings
 
-from .base import APIView
+from .base import APIView, ServiceView
 
 from ...crypto.RSA import Lock, Key
 
-class APICryptoView( APIView ):
-	
-	def dispatch( self, request, *args, **kwargs ):
-		self.params = getattr( request, request.method )
+class CryptoAPIView( APIView ):
 
-		lock = Lock( settings.API_PRIVATEKEY )
-		msg = self.get_param( 'msg' )
-		key = self.get_param( 'key' )
-		
-		data = lock.decrypt( msg, key )
-		self.params = json.loads( data )
-		
-		if hasattr( self, 'required_params' ):
-			check, param = self.check_params( self.required_params )
-			if not check:
-				return HttpResponseBadRequest('Parameter "%s" is required.'%param)
-			
-		return super(APIView, self).dispatch(request, *args, **kwargs)
+    def init_params( self, request, params=None ):
+        params = params if params else getattr( request, request.method, {} )
 
-class EncryptedServiceView( APICryptoView ):
+        lock = Lock( settings.API_PRIVATEKEY )
 
-	def get_services( cls ):
-		r = {}
-		for k, v in cls._service_defs.items():
-			r[k] = {
-				'name':v['name'],
-				'methods':v['methods'],
-				'url':reverse( v['url-name'] )
-			}
-		return r
+        #Get the b64 encoded and crypted key/message pair
+        msg = params.get( 'msg', None )
+        key = params.get( 'key', None )
+        
+        #b64decode the key/message pair
+        msg = base64.b64decode(msg)
+        key = base64.b64decode(key)
 
-	def get( self, request, *args, **kwargs ):
-		return self.OK( {'version':get_version(), 'services':self.get_services()} )
+        #Decrypt the message
+        data = lock.decrypt( msg, key )
+        data = json.loads( data )
+        return super(CryptoAPIView, self).init_params( request, params=data )
