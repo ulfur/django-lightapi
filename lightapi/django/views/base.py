@@ -4,7 +4,7 @@ import ast, json, traceback
 
 from django.core.urlresolvers import reverse
 
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseNotFound, HttpResponseBadRequest
 from django.views.generic import View
 
 from ... import get_version
@@ -38,23 +38,15 @@ class APIView( View ):
         check, param = self.check_params( )
         
         if not check:
-            return HttpResponseBadRequest('Parameter "%s" is required.'%param)
-
+            return HttpResponseBadRequest( 'Parameter "%s" is required.'%param )
+            
         try:
             return super(APIView, self).dispatch(request, *args, **kwargs)
         except:
             return self.ERROR( )
 
-    def process_params( self, params ):
-        '''Returns processed parameters
-        Classes inheriting this class may need to process the request parameters before
-        passing them on to the main logic of the instance. E.g. removing encryption in
-        the case of APICryptoView.
-        '''
-        return params
-
     def init_params( self, request, params=None ):
-        
+
         params = params if params else getattr( request, request.method, {} )
 
         self.params = dict( )
@@ -64,6 +56,14 @@ class APIView( View ):
             except:
                 self.params[k] = v
         return self.params
+
+    def process_params( self, params ):
+        '''Returns processed parameters
+        Classes inheriting this class may need to process the request parameters before
+        passing them on to the main logic of the instance. E.g. removing encryption in
+        the case of APICryptoView.
+        '''
+        return params
 
     def check_params( self, required=None ):
         '''Returns boolean
@@ -80,36 +80,67 @@ class APIView( View ):
         '''
         return self.params.get( name, None )
 
-    def response( self, status, data, success=False ):
+    def prepare_data( self, data ):
+        return json.dumps( data )
+        
+    def response( self, status, data, success=False, headers={ } ):
         '''Return a response to the request
                 status: The http status code for the response
                 data: Any data expected in response to the request
                 success: Did the request succeed or fail?
         '''
         data['success'] = success
-        res = HttpResponse( json.dumps( data ), content_type='application/json' )
+        
+        data = self.prepare_data( data )
+        res = HttpResponse( data, content_type='application/json' )
+        
         res.status_code = status
         return res
 
-    # Canned responses
-
+    # Canned responses. Using the response function is perfectly acceptable.
+    # However, it can be argued that using the canned responses below instead
+    # can improve the readability of the code using the framework.
+    # Detailed explanations of each HTTP status code is provided by the W3C at:
+    # http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+    
     def OK( self, status=200, data={ } ):
         '''The request was successfully completed with in the expected manner'''
         return self.response( status, data, success=True )
+
+    def CREATED( self, data={ } ):
+        return self.OK( status=201, data=data )
+
+    def ACCEPTED( self, data={ } ):
+        return self.OK( status=202, data=data )
+    
+    def NOCONTENT( self ):
+        return self.OK( status=204 )
         
     def NOK( self, status=400, data={ } ):
         '''The request could not be successfully completed for some reason'''
         return self.response( status, data )
 
+    def UNAUTHORIZED( self, data={ } ):
+        return self.NOK( status=401, data=data )
+
+    def FORBIDDEN( self, data={ } ):
+        return self.NOK( status=403, data=data )
+        
     def NOTFOUND( self, data={ } ):
         '''The requested service or resource was not found'''
-        return self.response( 404, data )
+        return self.NOK( status=404, data=data )
 
     def ERROR( self, status=500, data={ } ):
         '''Catastrophic failure. The server ran into an unexpected exception'''
         data['trace'] = traceback.format_exc( )
         return self.response( status, data )
 
+    def NOTIMPLEMENTED( self, data={ } ):
+        return self.ERROR( status=501, data=data )
+        
+    def UNAVAILABLE( self, data={ } ):
+        return self.ERROR( status=503, data=data )
+        
 class ServiceView( APIView ):
     '''ServiceView is a base view for announcing the services available.
     Available services are defined using the class attribute "services" as a dict.

@@ -5,8 +5,8 @@ import httplib, urllib, json, warnings, base64
 from . import get_version
 
 ERRORS = {
-    403: 'Forbidden. (The key doesn\'t fit)',
     400: 'Bad request. (Parameter missing?)',
+    403: 'Forbidden. (The key doesn\'t fit)',
     404: 'Service not found.',
     500: 'Server side error.',
 }
@@ -23,8 +23,8 @@ class Client( object ):
 
     def __init__( self, host, service_url='/services' ):
         self._host = host
-        status, response = self.request( service_url, method='GET' )
 
+        status, response = self.request( service_url, method='GET' )
         assert_status( status, response )
 
         if response['version'] > get_version( ):
@@ -37,10 +37,11 @@ class Client( object ):
     def prepare_data( self, data ):
         return data
 
-    def request( self, path, method='POST', **data ):
+    def request( self, path, method='POST', service='', **data ):
         http = httplib.HTTPConnection( self._host )
 
         data = self.prepare_data( data )
+
         data = urllib.urlencode( data )
 
         if method=='POST':
@@ -61,7 +62,7 @@ class Client( object ):
         try:
             method, name = name.split('_', 1)
             if name in self._services.keys() and method in self._services[name]['methods']:
-                return lambda **data: self.request( self._services[name]['url'], method=method.upper(), **data )
+                return lambda **data: self.request( self._services[name]['url'], method=method.upper(), service=name, **data )
         except:
             pass
         raise TypeError( 'API has no service called: %s'%name )
