@@ -5,8 +5,8 @@ import httplib, urllib, json, warnings, base64
 from . import get_version
 
 ERRORS = {
-    400: 'Bad request. (Parameter missing?)',
-    403: 'Forbidden. (The key doesn\'t fit)',
+    400: 'Bad request.',
+    403: 'Forbidden.',
     404: 'Service not found.',
     500: 'Server side error.',
 }
@@ -17,7 +17,7 @@ class APIException( Exception ):
 def assert_status( status, response='' ):
     if status != 200:
         error_msg = ERRORS.get( status, 'Undefined error (%i).'%status )
-        raise APIException( 'ERROR: %s\nResponse: %s'%(error_msg,response) )
+        raise APIException( 'ERROR (%i): %s\nResponse: %s'%(status,error_msg,response) )
 
 class Client( object ):
 

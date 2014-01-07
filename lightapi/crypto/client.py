@@ -13,7 +13,6 @@ class EncryptedClient( Client, CryptoMixin ):
         super(EncryptedClient, self).__init__(host, service_url)
 
     def load_data( self, datastr ):
-        print datastr
         data = json.loads( datastr )
         return self.decrypt( data, self._private_key.private )
         

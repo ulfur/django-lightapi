@@ -29,33 +29,36 @@ class APIView( View ):
         Used for service discovery and announcement.
         '''
         return getattr(cls, 'methods', ('get',))
-
+    
     def dispatch( self, request, *args, **kwargs ):
         '''Returns HTTPResponse
         Service request entry point.
         '''
-        self.init_params( request )
-        check, param = self.check_params( )
         
-        if not check:
-            return HttpResponseBadRequest( 'Parameter "%s" is required.'%param )
+        if request.method.lower() not in self.get_methods():
+            return self.METHODNOTALLOWED()
+        
+        try:    
+            self.params = self.init_params( dict( getattr( request, request.method, {} ) ) )
+        except AssertionError:
+            return self.FORBIDDEN( )
             
+        check, param = self.check_params( )
+        if not check:
+            return self.NOK( reason='Parameter "%s" is required.'%param )
+        
         try:
             return super(APIView, self).dispatch(request, *args, **kwargs)
-        except:
+        except Exception as e:
             return self.ERROR( )
 
-    def init_params( self, request, params=None ):
-
-        params = params if params else getattr( request, request.method, {} )
-
-        self.params = dict( )
+    def init_params( self, params ):
         for k, v in params.items():
             try:
-                self.params[k] = ast.literal_eval( v )
+                params[k] = ast.literal_eval( v )
             except:
-                self.params[k] = v
-        return self.params
+                params[k] = v
+        return params
 
     def process_params( self, params ):
         '''Returns processed parameters
@@ -90,7 +93,6 @@ class APIView( View ):
                 success: Did the request succeed or fail?
         '''
         data['success'] = success
-        
         data = self.prepare_data( data )
         res = HttpResponse( data, content_type='application/json' )
         
@@ -116,20 +118,24 @@ class APIView( View ):
     def NOCONTENT( self ):
         return self.OK( status=204 )
         
-    def NOK( self, status=400, data={ } ):
+    def NOK( self, status=400, reason='', data={ } ):
         '''The request could not be successfully completed for some reason'''
+        data['reason'] = reason
         return self.response( status, data )
 
     def UNAUTHORIZED( self, data={ } ):
         return self.NOK( status=401, data=data )
 
     def FORBIDDEN( self, data={ } ):
-        return self.NOK( status=403, data=data )
+        return self.NOK( status=403, reason='Forbidden', data=data )
         
-    def NOTFOUND( self, data={ } ):
+    def NOTFOUND( self, reason='Not found', data={ } ):
         '''The requested service or resource was not found'''
-        return self.NOK( status=404, data=data )
-
+        return self.NOK( status=404, reason=reason, data=data )
+    
+    def METHODNOTALLOWED( self ):
+        return self.NOK( status=405, reason='Method not allowed', data={'available_methods':self.get_methods()})
+        
     def ERROR( self, status=500, data={ } ):
         '''Catastrophic failure. The server ran into an unexpected exception'''
         data['trace'] = traceback.format_exc( )

@@ -4,7 +4,6 @@ import json, base64
 from ..client import Client
 from .RSA import Lock, Key
 
-
 class CryptoMixin( object ):
     
     def encrypt( self, data, enckey ):
@@ -33,4 +32,5 @@ class CryptoMixin( object ):
             datastr = l.decrypt( msg, key )
             data = json.loads( datastr )
 
-        return data
+            return data
+        return None
