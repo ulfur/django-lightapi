@@ -34,7 +34,6 @@ class APIView( View ):
         '''Returns HTTPResponse
         Service request entry point.
         '''
-        
         if request.method.lower() not in self.get_methods():
             return self.METHODNOTALLOWED()
         
@@ -54,6 +53,8 @@ class APIView( View ):
 
     def init_params( self, params ):
         for k, v in params.items():
+            if v:
+                v = v[0] if isinstance(v,list) and len(v)>0 else v
             try:
                 params[k] = ast.literal_eval( v )
             except:
