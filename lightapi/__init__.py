@@ -1,4 +1,4 @@
-__version__ = 0.102
+__version__ = 0.104
 
 def get_version( ):
     return __version__

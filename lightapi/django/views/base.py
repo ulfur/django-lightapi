@@ -55,10 +55,13 @@ class APIView( View ):
         for k, v in params.items():
             if v:
                 v = v[0] if isinstance(v,list) and len(v)>0 else v
-            try:
-                params[k] = ast.literal_eval( v )
-            except:
-                params[k] = v
+            if isinstance(v, str) and v[0] in ('[','('):
+                try:
+                    params[k] = ast.literal_eval( v )
+                except:
+                    pass
+                    
+            params[k] = v
         return params
 
     def process_params( self, params ):
