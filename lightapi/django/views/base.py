@@ -1,6 +1,6 @@
 #encoding: utf-8
 
-import ast, json, traceback
+import json, traceback
 
 from django.core.urlresolvers import reverse
 
@@ -8,6 +8,8 @@ from django.http import HttpResponse, HttpResponseNotFound, HttpResponseBadReque
 from django.views.generic import View
 
 from ... import get_version
+
+from ...value_utils import parse_value
 
 class APIView( View ):
     '''APIView is the base class for exposing services.
@@ -52,16 +54,11 @@ class APIView( View ):
             return self.ERROR( )
 
     def init_params( self, params ):
-        for k, v in params.items():
+        for k, v in params.items( ):
             if v:
-                v = v[0] if isinstance(v,list) and len(v)>0 else v
-            if isinstance(v, str) and v[0] in ('[','('):
-                try:
-                    params[k] = ast.literal_eval( v )
-                except:
-                    pass
-                    
-            params[k] = v
+                v = v[ 0 ] if isinstance( v, list ) and len( v ) > 0 else v
+                v = parse_value( v )
+            params[ k ] = v
         return params
 
     def process_params( self, params ):
@@ -88,6 +85,11 @@ class APIView( View ):
         return self.params.get( name, None )
 
     def prepare_data( self, data ):
+        try:
+            from bson import json_util
+            return json.dumps( data, default=json_util.default )
+        except:
+            pass
         return json.dumps( data )
         
     def response( self, status, data, success=False, headers={ } ):

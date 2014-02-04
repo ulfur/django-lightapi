@@ -3,6 +3,7 @@
 import httplib, urllib, json, warnings, base64
 
 from . import get_version
+from .value_utils import parse_value
 
 ERRORS = {
     400: 'Bad request.',
@@ -32,7 +33,16 @@ class Client( object ):
         self._services = response['services']
 
     def load_data( self, datastr ):
-        return json.loads( datastr )
+        try:
+            from bson import json_util
+            data = json.loads( datastr, object_hook=json_util.object_hook )
+        except:
+            data = json.loads( datastr )
+        
+        for k, v in data.items():
+            data[k] = parse_value( v )
+            
+        return data
 
     def prepare_data( self, data ):
         return data
