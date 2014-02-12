@@ -79,10 +79,10 @@ class APIView( View ):
                 return False, p
         return True, None
 
-    def get_param( self, name ):
+    def get_param( self, name, default=None ):
         '''Returns the parameter named "name" or None if no such parameter exists
         '''
-        return self.params.get( name, None )
+        return self.params.get( name, default )
 
     def prepare_data( self, data ):
         try:
