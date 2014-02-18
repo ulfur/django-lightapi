@@ -1,6 +1,7 @@
 #encoding: utf-8
 
 import json, traceback
+from datetime import date, datetime
 
 from django.core.urlresolvers import reverse
 
@@ -84,7 +85,18 @@ class APIView( View ):
         '''
         return self.params.get( name, default )
 
+    def print_data( self, data, indent=0 ):
+        print '\t'*indent, type(data)
+        if isinstance( data, dict ):
+            for k, v in data.items():
+                self.print_data( v, indent=indent+1 )
+        elif isinstance(data, list) or isinstance(data,tuple):
+            for l in data:
+                self.print_data( l, indent=indent+1 )
+                        
     def prepare_data( self, data ):
+        data = parse_value( data )
+        
         try:
             from bson import json_util
             return json.dumps( data, default=json_util.default )
