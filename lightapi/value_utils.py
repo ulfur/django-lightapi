@@ -20,7 +20,7 @@ def parse_value( value ):
     return value
     
 reg_listtuple = '^[\(|\[].+[\)|\]]$'
-reg_intfloat = '^\d{1,}(\.\d{1,}){0,1}$'
+reg_intfloat = '^(0\.|[1-9])\d*(\.\d{1,}){0,1}$'
 reg_datetime = '^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}\.\d{1,6}){0,1}$'
 
 def str_value( value ):
